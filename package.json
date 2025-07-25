@@ -1,0 +1,57 @@
+{
+  "name": "moodpalette-monorepo",
+  "version": "1.0.0",
+  "description": "A mood-based color palette generator with AI-powered suggestions and soothing animations",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "npm run start --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "start": "npm run start:server",
+    "start:client": "npm run start --workspace=client",
+    "start:server": "npm run start --workspace=server",
+    "build": "npm run build --workspace=client",
+    "build:client": "npm run build --workspace=client",
+    "test": "npm run test --workspaces",
+    "test:client": "npm run test --workspace=client",
+    "test:server": "npm run test --workspace=server",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "install:all": "npm install",
+    "postinstall": "npm run postinstall --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/moodpalette.git"
+  },
+  "keywords": [
+    "color-palette",
+    "mood",
+    "ai",
+    "animation",
+    "react",
+    "node.js",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-username/moodpalette/issues"
+  },
+  "homepage": "https://github.com/your-username/moodpalette#readme"
+}

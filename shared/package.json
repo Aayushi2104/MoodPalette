@@ -1,0 +1,19 @@
+{
+  "name": "@moodpalette/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities, types, and constants for MoodPalette monorepo",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint src --ext .js",
+    "lint:fix": "eslint src --ext .js --fix",
+    "clean": "rm -rf node_modules"
+  },
+  "keywords": ["shared", "utilities", "constants"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

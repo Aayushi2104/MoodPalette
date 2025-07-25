@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoodPalette - Color Palette Generator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              'sans': ['Inter', 'system-ui', 'sans-serif'],
+              'display': ['Poppins', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+              'mood-purple': '#8B5CF6',
+              'mood-blue': '#3B82F6',
+              'mood-pink': '#EC4899',
+              'mood-cyan': '#06B6D4',
+              'mood-indigo': '#6366F1',
+              'mood-emerald': '#10B981',
+              'mood-amber': '#F59E0B',
+              'mood-rose': '#F43F5E',
+            },
+            animation: {
+              'bgFade': 'bgFade 15s ease infinite',
+              'float-0': 'float 8s ease-in-out infinite',
+              'float-1': 'float 10s ease-in-out infinite',
+              'float-2': 'float 12s ease-in-out infinite',
+              'float-3': 'float 14s ease-in-out infinite',
+              'drift': 'drift 20s linear infinite',
+              'pulse-wave': 'pulseWave 8s ease-in-out infinite',
+              'ripple-expand': 'rippleExpand 4s ease-out infinite',
+              'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+              'float-trail': 'floatTrail 12s ease-in-out infinite',
+              'drift-slow': 'driftSlow 20s ease-in-out infinite',
+              'pulse-slow': 'pulseSlow 8s ease-in-out infinite',
+              'shimmer': 'shimmer 6s ease-in-out infinite',
+              'bounce-gentle': 'bounceGentle 2s ease-in-out infinite',
+              'fade-in': 'fadeIn 0.6s ease-out',
+              'slide-up': 'slideUp 0.5s ease-out',
+              'gradient-shift': 'gradientShift 8s ease-in-out infinite',
+              'hover-lift': 'hoverLift 0.3s ease-out',
+              'sparkle': 'sparkle 2s linear infinite',
+              'twinkle': 'twinkle 3s ease-in-out infinite',
+              'particle-burst': 'particleBurst 1.5s ease-out infinite',
+            },
+            keyframes: {
+              bgFade: {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0px) translateX(0px)' },
+                '25%': { transform: 'translateY(-20px) translateX(10px)' },
+                '50%': { transform: 'translateY(-10px) translateX(-15px)' },
+                '75%': { transform: 'translateY(-30px) translateX(5px)' },
+              },
+              drift: {
+                '0%': { transform: 'translateX(-100px) translateY(0px) scale(0.8)' },
+                '25%': { transform: 'translateX(100px) translateY(-50px) scale(1.1)' },
+                '50%': { transform: 'translateX(200px) translateY(20px) scale(0.9)' },
+                '75%': { transform: 'translateX(50px) translateY(-30px) scale(1.2)' },
+                '100%': { transform: 'translateX(-100px) translateY(0px) scale(0.8)' },
+              },
+              pulseWave: {
+                '0%, 100%': { opacity: '0.3', transform: 'scale(1)' },
+                '50%': { opacity: '0.7', transform: 'scale(1.05)' },
+              },
+              rippleExpand: {
+                '0%': { transform: 'scale(1)', opacity: '1' },
+                '100%': { transform: 'scale(4)', opacity: '0' },
+              },
+              pulseGlow: {
+                '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
+                '50%': { opacity: '1', transform: 'scale(1.1)' },
+              },
+              floatTrail: {
+                '0%, 100%': { transform: 'translateY(0px) translateX(0px) rotate(0deg)' },
+                '33%': { transform: 'translateY(-15px) translateX(8px) rotate(2deg)' },
+                '66%': { transform: 'translateY(-8px) translateX(-12px) rotate(-1deg)' },
+              },
+              driftSlow: {
+                '0%': { transform: 'translateX(-30px) translateY(0px) scale(0.9)' },
+                '25%': { transform: 'translateX(40px) translateY(-20px) scale(1.05)' },
+                '50%': { transform: 'translateX(80px) translateY(8px) scale(0.95)' },
+                '75%': { transform: 'translateX(15px) translateY(-12px) scale(1.1)' },
+                '100%': { transform: 'translateX(-30px) translateY(0px) scale(0.9)' },
+              },
+              pulseSlow: {
+                '0%, 100%': { opacity: '0.3', transform: 'scale(1)' },
+                '50%': { opacity: '0.8', transform: 'scale(1.03)' },
+              },
+              shimmer: {
+                '0%': { backgroundPosition: '-200% 0%' },
+                '100%': { backgroundPosition: '200% 0%' },
+              },
+              bounceGentle: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(30px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              gradientShift: {
+                '0%, 100%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+              },
+              hoverLift: {
+                '0%': { transform: 'translateY(0) scale(1)' },
+                '100%': { transform: 'translateY(-8px) scale(1.02)' },
+              },
+              sparkle: {
+                '0%, 100%': { opacity: '0', transform: 'scale(0)' },
+                '50%': { opacity: '1', transform: 'scale(1)' },
+              },
+              twinkle: {
+                '0%, 100%': { opacity: '0.3', transform: 'scale(1)' },
+                '50%': { opacity: '1', transform: 'scale(1.2)' },
+              },
+              particleBurst: {
+                '0%': { opacity: '1', transform: 'scale(0) translateX(0)' },
+                '50%': { opacity: '0.8', transform: 'scale(1)' },
+                '100%': { opacity: '0', transform: 'scale(0.5) translateX(30px)' },
+              },
+            },
+            backgroundImage: {
+              'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+              'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+            },
+            backdropBlur: {
+              xs: '2px',
+            },
+            boxShadow: {
+              'glow': '0 0 20px rgba(139, 92, 246, 0.3)',
+              'glow-blue': '0 0 20px rgba(59, 130, 246, 0.3)',
+              'glow-pink': '0 0 20px rgba(236, 72, 153, 0.3)',
+              'inner-glow': 'inset 0 2px 4px 0 rgba(139, 92, 246, 0.1)',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: linear-gradient(135deg, #FFCBA4 0%, #FFB07A 50%, #FFA07A 100%);
+        min-height: 100vh;
+        transition: all 0.3s ease;
+      }
+      
+      body.dark {
+        background: linear-gradient(135deg, #1F2937 0%, #374151 50%, #4B5563 100%);
+      }
+      
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+      
+      .dark .glass-effect {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .card-hover:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      }
+      
+      .gradient-text {
+        background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .theme-transition {
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      }
+    </style>
+    <script>
+      // Dark mode initialization
+      function initTheme() {
+        // Wait for DOM to be ready
+        if (!document.documentElement) {
+          document.addEventListener('DOMContentLoaded', initTheme);
+          return;
+        }
+        
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+        
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.body.classList.add('dark');
+        }
+      }
+      
+      // Initialize theme when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTheme);
+      } else {
+        initTheme();
+      }
+    </script>
+  </head>
+  <body class="theme-transition">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
