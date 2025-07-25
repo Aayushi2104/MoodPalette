@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { API_ENDPOINTS } from '../config/api';
 
@@ -22,74 +22,104 @@ const AISuggestions = ({ currentMood, currentPalette, onApplySuggestion }) => {
     { label: 'Complementary', value: 'complementary' }
   ];
 
-  // Auto-fetch suggestions when mood changes
-  useEffect(() => {
-    if (currentMood && currentMood !== 'random') {
-      fetchSuggestions();
-    }
-  }, [currentMood]);
-
-  const fetchSuggestions = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch(API_ENDPOINTS.AI.SUGGESTIONS, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mood: currentMood,
-          currentColors: currentPalette,
-          userInput: userInput.trim(),
-          style: style
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI suggestions');
-      }
-
-      const data = await response.json();
-      setSuggestions(data.suggestions);
-      setExplanation(data.explanation);
-      setConfidence(data.confidence);
-      
-      if (data.fallback) {
-        setError('AI temporarily unavailable - showing algorithmic suggestions');
-      }
-    } catch (error) {
-      console.error('AI suggestions error:', error);
-      setError(error.message);
-      
-      // Fallback to simple algorithmic suggestions
-      generateFallbackSuggestions();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fallback function to generate algorithmic suggestions
-  const generateFallbackSuggestions = () => {
-    // Simple fallback algorithm for color suggestions
+  const generateFallbackSuggestions = useCallback(() => {
     const fallbackColors = [];
-    const baseColors = currentPalette && currentPalette.length > 0 ? currentPalette : ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
-    
-    // Generate variations based on current palette or default colors
+    const baseColors = currentPalette && currentPalette.length > 0
+      ? currentPalette
+      : ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
+
     for (let i = 0; i < 5; i++) {
       const baseColor = baseColors[i % baseColors.length];
-      // Simple color manipulation for variety
       fallbackColors.push(baseColor);
     }
-    
+
     setSuggestions(fallbackColors);
     setExplanation('Generated using fallback algorithm while AI is unavailable.');
     setConfidence(0.6);
-  };
+  }, [currentPalette]);
+
+  useEffect(() => {
+    if (currentMood && currentMood !== 'random') {
+      const fetchSuggestions = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+          const response = await fetch(API_ENDPOINTS.AI.SUGGESTIONS, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              mood: currentMood,
+              currentColors: currentPalette,
+              userInput: userInput.trim(),
+              style: style
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to get AI suggestions');
+          }
+
+          const data = await response.json();
+          setSuggestions(data.suggestions);
+          setExplanation(data.explanation);
+          setConfidence(data.confidence);
+
+          if (data.fallback) {
+            setError('AI temporarily unavailable - showing algorithmic suggestions');
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('AI suggestions error (useEffect):', error);
+          }
+          setError(error.message);
+          generateFallbackSuggestions();
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchSuggestions();
+    }
+  }, [currentMood, currentPalette, style, userInput, generateFallbackSuggestions]);
 
   const handleGetSuggestions = () => {
-    fetchSuggestions();
+    setExpanded(true);
+    setError(null);
+    setLoading(true);
+    setSuggestions([]);
+
+    fetch(API_ENDPOINTS.AI.SUGGESTIONS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mood: currentMood,
+        currentColors: currentPalette,
+        userInput: userInput.trim(),
+        style: style
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setSuggestions(data.suggestions);
+        setExplanation(data.explanation);
+        setConfidence(data.confidence);
+        if (data.fallback) {
+          setError('AI temporarily unavailable - showing algorithmic suggestions');
+        }
+      })
+      .catch((error) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('AI suggestions error (manual fetch):', error);
+        }
+        setError(error.message);
+        generateFallbackSuggestions();
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const handleApplySuggestion = (colors) => {
@@ -131,34 +161,27 @@ const AISuggestions = ({ currentMood, currentPalette, onApplySuggestion }) => {
       </div>
 
       {expanded && (
-        <div className="space-y-6 animate-slide-up">
-          {/* User Input Section */}
+        <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-black/90 dark:text-white/90 mb-3 flex items-center space-x-2">
-                <span>💭</span>
-                <span>Describe what you want (optional)</span>
-              </label>
+              <label className="block text-sm font-medium text-white mb-2">💭 Describe your idea (optional)</label>
               <input
                 type="text"
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
-                placeholder="e.g., sunset colors, ocean vibes, warm and cozy"
-                className="w-full p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-black dark:text-white placeholder-black/50 dark:placeholder-white/50 focus:ring-2 focus:ring-mood-purple focus:border-transparent transition-all duration-300"
+                placeholder="e.g., warm and cozy, ocean, sunrise"
+                className="w-full p-3 bg-white/10 text-white rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-black/90 dark:text-white/90 mb-3 flex items-center space-x-2">
-                <span>🎨</span>
-                <span>Style Preference</span>
-              </label>
+              <label className="block text-sm font-medium text-white mb-2">🎨 Style</label>
               <select
                 value={style}
                 onChange={(e) => setStyle(e.target.value)}
-                className="w-full p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-black dark:text-white focus:ring-2 focus:ring-mood-purple focus:border-transparent transition-all duration-300"
+                className="w-full p-3 bg-white/10 text-white rounded-lg"
               >
                 {STYLE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value} className="bg-gray-800 text-white">
+                  <option key={option.value} value={option.value} className="bg-black text-white">
                     {option.label}
                   </option>
                 ))}
@@ -166,126 +189,57 @@ const AISuggestions = ({ currentMood, currentPalette, onApplySuggestion }) => {
             </div>
           </div>
 
-          {/* Get Suggestions Button */}
           <button
             onClick={handleGetSuggestions}
-            disabled={loading || !currentMood}
-            className="group w-full px-6 py-4 bg-gradient-to-r from-mood-purple via-mood-indigo to-mood-blue text-white font-semibold text-lg rounded-xl shadow-glow hover:shadow-glow-blue transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 flex items-center justify-center space-x-3"
+            className="w-full mt-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold rounded-lg hover:scale-105 transition"
+            disabled={loading}
           >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                <span>Getting AI suggestions...</span>
-              </>
-            ) : (
-              <>
-                <span className="text-xl group-hover:animate-bounce-gentle">🧠</span>
-                <span>Get AI Suggestions</span>
-                <span className="text-xl group-hover:animate-bounce-gentle">✨</span>
-              </>
-            )}
+            {loading ? 'Loading AI Suggestions...' : '✨ Get AI Suggestions'}
           </button>
 
-          {/* Error Display */}
-          {error && (
-            <div className="p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/30 rounded-xl text-amber-200 text-sm backdrop-blur-sm animate-fade-in">
-              <div className="flex items-center space-x-2">
-                <span className="text-lg">⚠️</span>
-                <span>{error}</span>
-              </div>
-            </div>
-          )}
+          {error && <p className="mt-4 text-red-400">{error}</p>}
+          {explanation && <p className="mt-2 text-blue-300 italic">{explanation}</p>}
 
-          {/* AI Explanation */}
-          {explanation && (
-            <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 rounded-xl backdrop-blur-sm animate-fade-in">
-              <div className="flex items-start space-x-3">
-                <span className="text-lg">💡</span>
-                <p className="text-blue-200 text-sm leading-relaxed">{explanation}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Suggestions Display */}
           {suggestions.length > 0 && (
-            <div className="space-y-4 animate-slide-up">
-              <h4 className="font-semibold text-black dark:text-white flex items-center space-x-2">
-                <span className="text-xl">🎨</span>
-                <span>AI Suggested Palette:</span>
-              </h4>
-              <div className="glass-effect backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:shadow-glow transition-all duration-300">
-                <div className="grid grid-cols-5 gap-2 mb-4">
-                  {suggestions.map((color, i) => (
-                    <div
-                      key={i}
-                      className="group relative"
-                    >
-                      <div
-                        className="w-full h-20 rounded-lg cursor-pointer relative overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
-                        style={{ 
-                          background: `linear-gradient(135deg, ${color} 0%, ${color}CC 100%)`,
-                          border: '2px solid rgba(255,255,255,0.2)'
-                        }}
-                        title={color}
-                      >
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                          <span className="text-white text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            {color}
-                          </span>
-                        </div>
-                        <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-white/60 rounded-full animate-sparkle"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleApplySuggestion(suggestions)}
-                    className="group flex-1 px-4 py-3 bg-gradient-to-r from-mood-purple to-mood-indigo text-white rounded-xl hover:scale-105 transition-all duration-300 font-semibold shadow-glow flex items-center justify-center space-x-2"
-                  >
-                    <span className="text-lg group-hover:animate-bounce-gentle">✨</span>
-                    <span>Apply This Palette</span>
-                  </button>
-                  <button
-                    onClick={() => copyToClipboard(suggestions)}
-                    className="px-4 py-3 bg-white/10 text-black dark:text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20 flex items-center space-x-2"
-                  >
-                    <span>📋</span>
-                    <span>Copy</span>
-                  </button>
-                </div>
+            <div className="mt-6">
+              <div className="grid grid-cols-5 gap-2">
+                {suggestions.map((color, i) => (
+                  <div
+                    key={i}
+                    className="w-full h-12 rounded-lg"
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                ))}
+              </div>
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => handleApplySuggestion(suggestions)}
+                  className="flex-1 py-2 bg-green-600 text-white rounded-lg"
+                >
+                  ✅ Apply Palette
+                </button>
+                <button
+                  onClick={() => copyToClipboard(suggestions)}
+                  className="flex-1 py-2 bg-gray-700 text-white rounded-lg"
+                >
+                  📋 Copy to Clipboard
+                </button>
               </div>
             </div>
           )}
-
-          {/* Quick Tips */}
-          <div className="glass-effect backdrop-blur-sm rounded-xl p-4 border border-white/10">
-            <div className="text-sm text-black/70 dark:text-white/70 space-y-2">
-              <p className="flex items-center space-x-2">
-                <span>💡</span>
-                <strong className="text-black/90 dark:text-white/90">Tips for better AI suggestions:</strong>
-              </p>
-              <ul className="ml-6 space-y-1 text-black/60 dark:text-white/60">
-                <li>• Be specific in your description for better results</li>
-                <li>• Try different style preferences to explore variations</li>
-                <li>• The AI considers your current mood and existing colors</li>
-                <li>• Experiment with different combinations!</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        </>
       )}
 
-      {/* Collapsed View */}
       {!expanded && suggestions.length > 0 && (
-        <div className="grid grid-cols-5 gap-2 animate-fade-in">
+        <div className="grid grid-cols-5 gap-2 mt-4">
           {suggestions.map((color, i) => (
             <div
               key={i}
-              className="w-full h-12 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105"
+              className="w-full h-10 rounded-lg cursor-pointer"
               style={{ backgroundColor: color }}
-              title={`AI suggestion: ${color}`}
               onClick={() => setExpanded(true)}
+              title="Click to expand"
             />
           ))}
         </div>
